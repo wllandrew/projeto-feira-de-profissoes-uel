@@ -2,3 +2,5 @@
 
 Contribuintes:
 - Andrew Willian Freitas
+- Kauã Felipe Martins
+- Leonardo Madeira Alves Pereira

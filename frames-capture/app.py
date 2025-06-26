@@ -5,23 +5,26 @@ import time
 IMAGE_COUNT_JUMPING = 0
 IMAGE_COUNT_NO_JUMPING = 0
 
+LOCAL_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def capture(directoryX, img):
     global IMAGE_COUNT_JUMPING
     global IMAGE_COUNT_NO_JUMPING
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # imgCanny = cv2.Canny(gray, 155, 105)
+    imgCanny = cv2.Canny(gray, 155, 105)
 
-    os.makedirs(directoryX, exist_ok=True)
+    directory = os.path.join(LOCAL_DIR, directoryX)
+    os.makedirs(directory, exist_ok=True)
     if "no" in directoryX:
         i = IMAGE_COUNT_NO_JUMPING
         IMAGE_COUNT_NO_JUMPING += 1
     else:
         i = IMAGE_COUNT_JUMPING
         IMAGE_COUNT_JUMPING += 1
-
-    filename = os.path.join(directoryX, f'image_{i}.png')
-    cv2.imwrite(filename, gray)
+    
+    filename = os.path.join(directory, f'image_{i}.png')
+    cv2.imwrite(filename, imgCanny)
 
 i = 0
 cap = cv2.VideoCapture(0)

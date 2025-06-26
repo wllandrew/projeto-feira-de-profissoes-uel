@@ -32,7 +32,7 @@ directory_jumping = 'jumping'
 directory_nojumping = 'no-jumping'
 
 
-next_timer_start = time.time() + 3
+next_timer_start = time.time() + 4
 timer_phase = -1 
 last_phase_time = 0
 
@@ -41,6 +41,8 @@ capture_start_time = 0
 frames_captured = 0
 
 print("Pressione 'q' para sair.")
+
+frames = 1/5
 
 while True:
     success, img = cap.read()
@@ -54,28 +56,28 @@ while True:
 
     if timer_phase == -1 and now >= next_timer_start:
         print("\nPULE EM:")
-        timer_phase = 3
+        timer_phase = 4
         last_phase_time = now
         capture(directory_nojumping, img)
     
-    elif timer_phase in [3, 2, 1] and now - last_phase_time >= 1:
-        print(timer_phase)
+    elif timer_phase in [4, 3, 2] and now - last_phase_time >= 1:
+        print(timer_phase-1)
         last_phase_time = now
         timer_phase -= 1
         capture(directory_nojumping, img)
 
-    elif timer_phase == 0 and now - last_phase_time >= 1:
+    elif timer_phase == 1 and now - last_phase_time >= 1:
         print("PULE!")
         last_phase_time = now
         timer_phase = -2
-        capturing_frames = True
         capture_start_time = now
+        capturing_frames = True
         frames_captured = 0
         capture(directory_nojumping, img)
 
     elif capturing_frames:
-        if frames_captured < 5 and now - capture_start_time <= 1:
-            if now - last_phase_time >= 0.2:
+        if frames_captured <= 6 and now - capture_start_time <= 1:
+            if now - last_phase_time >= frames:
                 last_phase_time = now
                 capture(directory_jumping, img)
                 print(f"Imagem {i} salva!")
@@ -84,7 +86,7 @@ while True:
         else:
             capturing_frames = False
             timer_phase = -1
-            next_timer_start = now + 3
+            next_timer_start = now + 1
             print()
 
     if cv2.waitKey(1) & 0xFF == ord('q'):

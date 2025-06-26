@@ -2,8 +2,8 @@ import cv2
 import os
 import time
 
-IMAGE_COUNT_JUMPING = 0
-IMAGE_COUNT_NO_JUMPING = 0
+IMAGE_COUNT_JUMPING = 52
+IMAGE_COUNT_NO_JUMPING = 52
 
 LOCAL_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,7 +41,7 @@ capture_start_time = 0
 frames_captured = 0
 
 print("Pressione 'q' para sair.")
-
+start = True
 frames = 1/5
 
 while True:
@@ -75,7 +75,7 @@ while True:
         frames_captured = 0
         capture(directory_nojumping, img)
 
-    elif capturing_frames:
+    elif capturing_frames and start:
         if frames_captured <= 6 and now - capture_start_time <= 1:
             if now - last_phase_time >= frames:
                 last_phase_time = now
@@ -91,6 +91,10 @@ while True:
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    if cv2.waitKey(1) & 0xFF == ord('p'):
+        start = False
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        start = True
 
 cap.release()
 cv2.destroyAllWindows()

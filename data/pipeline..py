@@ -36,6 +36,6 @@ dfJumping = createDataframeLabeled(getImagesToNumpy(JUMPING_IMAGE_PATH), 'Jumpin
 dfNoJumping = createDataframeLabeled(getImagesToNumpy(JUMPING_IMAGE_PATH), 'Jumping', 0)
 df = pd.concat([dfJumping, dfNoJumping])
 
-df.to_csv('jumping-dataset-rotulado.csv', index=False)
+df.to_csv('jumping-dataset.csv', index=False)
 
     

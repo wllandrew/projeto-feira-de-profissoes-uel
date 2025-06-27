@@ -23,15 +23,15 @@ def processingImage(pasta_origem, pasta_destino):
         else:
             print(f"Falha ao abrir: {nome_arquivo}")
 
-origem_jumping = "./frames-capture/jumping-tratado"
-destino_jumping = "./image-processing/jumping-redimensionado"
+origem_jumping = "jumping-gerado"
+destino_jumping = "jumping-redimensionado"
 
-origem_nojumping = "./frames-capture/no-jumping-tratado"
-destino_nojumping = "./image-processing/no-jumping-redimensionado"
+# origem_nojumping = "./frames-capture/no-jumping-tratado"
+# destino_nojumping = "./image-processing/no-jumping-redimensionado"
 
 os.makedirs(destino_jumping, exist_ok=True)
-os.makedirs(destino_nojumping, exist_ok=True)
+# os.makedirs(destino_nojumping, exist_ok=True)
 
 processingImage(origem_jumping, destino_jumping)
-processingImage(origem_nojumping, destino_nojumping)
+# processingImage(origem_nojumping, destino_nojumping)
 

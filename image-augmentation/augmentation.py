@@ -6,14 +6,14 @@ import albumentations as A
 
 os.system('')
 
-INPUT_DIR = "jumping"
+INPUT_DIR = "jumping-redimensionado"
 OUTPUT_DIR = "augmented-jumping"
 AUGMENT = 15
 RESOLUTION = (128, 128)  
 ROTULO = 1  # 'jumping' = 1
 CSV_NAME = 'dataset-jumping.csv'
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True) 
 
 # Augmentation pipeline
 transform = A.Compose([
@@ -37,7 +37,7 @@ for file in os.listdir(INPUT_DIR):
         imagem_aug = transform(image=imagem)['image']
         imagem_cinza = cv2.cvtColor(imagem_aug, cv2.COLOR_BGR2GRAY)
 
-        imagem_path = os.path.join(OUTPUT_DIR, f'imagem_{cont}.png')
+        imagem_path = os.path.join(OUTPUT_DIR, f'augmented_imagem_{cont}.png')
         cv2.imwrite(imagem_path, imagem_cinza)
 
         print(f'\x1b[0K\x1b[u\x1b[32m{i+1:02d}/{AUGMENT:02d} Imagens aumentadas \x1b[0m', end='')

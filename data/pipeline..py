@@ -12,7 +12,7 @@ Pipeline para converter as imagens em csv com rótulos
 
 def getImagesToNumpy(images_path):
     dataset = []
-    for file in os.listdir(JUMPING_IMAGE_PATH)[:100]:
+    for file in os.listdir(JUMPING_IMAGE_PATH):
         img_path = os.path.join(JUMPING_IMAGE_PATH, file)
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

@@ -23,8 +23,7 @@ transform = A.Compose([
 ])
 
 # Processar imagens e salvar imagens
-cont = 0
-# dataset = []
+cont = len(os.listdir(INPUT_DIR))+1
 for file in os.listdir(INPUT_DIR):
     caminho = os.path.join(INPUT_DIR, file)
     imagem = cv2.imread(caminho)
@@ -38,21 +37,11 @@ for file in os.listdir(INPUT_DIR):
         imagem_aug = transform(image=imagem)['image']
         imagem_cinza = cv2.cvtColor(imagem_aug, cv2.COLOR_BGR2GRAY)
 
-        imagem_path = os.path.join(OUTPUT_DIR, f'Imagem_{cont}.png')
+        imagem_path = os.path.join(OUTPUT_DIR, f'imagem_{cont}.png')
         cv2.imwrite(imagem_path, imagem_cinza)
 
-        # vetor = imagem_cinza.flatten()
-        # dataset.append(np.append(vetor, ROTULO))
-        
         print(f'\x1b[0K\x1b[u\x1b[32m{i+1:02d}/{AUGMENT:02d} Imagens aumentadas \x1b[0m', end='')
         cont += 1
     print()
 
 print(f"\nTotal de amostras geradas: {cont+1}")
-
-# df = pd.DataFrame(dataset)
-# col = [f'{i}' for i in range(RESOLUTION[0] * RESOLUTION[1])] + ['jumping']
-# df.columns = col
-# df.to_csv(CSV_NAME, index=False)
-
-# print(f"CSV salvo como {CSV_NAME}")

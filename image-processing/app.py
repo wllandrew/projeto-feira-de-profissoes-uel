@@ -6,7 +6,7 @@ import cv2
 import os
 
 def processingImage(pasta_origem, pasta_destino):
-    novo_tamanho = (256, 144)
+    novo_tamanho = (128, 72)
 
     for nome_arquivo in os.listdir(pasta_origem):
         caminho_arquivo = os.path.join(pasta_origem, nome_arquivo)

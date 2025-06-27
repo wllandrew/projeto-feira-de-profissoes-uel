@@ -1,100 +1,76 @@
 import cv2
-import os
+import numpy as np
 import time
+import os
 
-IMAGE_COUNT_JUMPING = 52
-IMAGE_COUNT_NO_JUMPING = 52
+cap = cv2.VideoCapture(2)
 
-LOCAL_DIR = os.path.dirname(os.path.abspath(__file__))
+LINE_Y = 50 
 
-def capture(directoryX, img):
-    global IMAGE_COUNT_JUMPING
-    global IMAGE_COUNT_NO_JUMPING
-
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgCanny = cv2.Canny(gray, 155, 105)
-
-    directory = os.path.join(LOCAL_DIR, directoryX)
-    os.makedirs(directory, exist_ok=True)
-    if "no" in directoryX:
-        i = IMAGE_COUNT_NO_JUMPING
-        IMAGE_COUNT_NO_JUMPING += 1
-    else:
-        i = IMAGE_COUNT_JUMPING
-        IMAGE_COUNT_JUMPING += 1
-    
-    filename = os.path.join(directory, f'image_{i}.png')
-    cv2.imwrite(filename, imgCanny)
-
-i = 0
-cap = cv2.VideoCapture(0)
-directory_jumping = 'jumping'
-directory_nojumping = 'no-jumping'
-
-
-next_timer_start = time.time() + 4
-timer_phase = -1 
-last_phase_time = 0
-
-capturing_frames = False
-capture_start_time = 0
-frames_captured = 0
-
-print("Pressione 'q' para sair.")
-start = True
-frames = 1/5
+success, img = cap.read()
+first_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+first_gray = cv2.GaussianBlur(first_gray, (21, 21), 0)
 
 while True:
     success, img = cap.read()
     if not success:
-        print("Erro ao acessar a câmera.")
         break
 
-    cv2.imshow("Webcam", img)
-
-    now = time.time()
-
-    if timer_phase == -1 and now >= next_timer_start:
-        print("\nPULE EM:")
-        timer_phase = 4
-        last_phase_time = now
-        capture(directory_nojumping, img)
+    movimento_detectado = False
     
-    elif timer_phase in [4, 3, 2] and now - last_phase_time >= 1:
-        print(timer_phase-1)
-        last_phase_time = now
-        timer_phase -= 1
-        capture(directory_nojumping, img)
+    LINE_Y = max(0, min(LINE_Y, img.shape[0] - 1))
+    key = cv2.waitKey(30) & 0xFF
 
-    elif timer_phase == 1 and now - last_phase_time >= 1:
-        print("PULE!")
-        last_phase_time = now
-        timer_phase = -2
-        capture_start_time = now
-        capturing_frames = True
-        frames_captured = 0
-        capture(directory_nojumping, img)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (21, 21), 0)
 
-    elif capturing_frames and start:
-        if frames_captured <= 6 and now - capture_start_time <= 1:
-            if now - last_phase_time >= frames:
-                last_phase_time = now
-                capture(directory_jumping, img)
-                print(f"Imagem {i} salva!")
-                i += 1
-                frames_captured += 1
-        else:
-            capturing_frames = False
-            timer_phase = -1
-            next_timer_start = now + 1
-            print()
+    frame_delta = cv2.absdiff(first_gray, gray)
+    thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
+    thresh = cv2.dilate(thresh, None, iterations=2)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    cv2.line(img, (0, LINE_Y), (img.shape[1], LINE_Y), (0, 255, 255), 2)
+
+    movimento_detectado = False
+
+    for contour in contours:
+        if cv2.contourArea(contour) < 1000:
+            continue
+
+        (x, y, w, h) = cv2.boundingRect(contour)
+        # center_y = y + h // 2
+        center_y = y
+
+        if center_y <= LINE_Y:
+            timestamp = int(time.time())
+
+            name_file = f"captura_{timestamp}.jpg"
+            local_dir = os.path.dirname(os.path.abspath(__file__))
+
+            directory = os.path.join(local_dir, 'jumping')
+            os.makedirs(directory, exist_ok=True)
+
+            arquivo = os.path.join(directory, name_file)
+
+            cv2.imwrite(arquivo, img)
+            print(f"[INFO] Movimento detectado! Imagem salva: captura_{timestamp}.jpg")
+            movimento_detectado = True
+
+
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    
+    if not movimento_detectado:
+        first_gray = gray.copy()
+
+    cv2.imshow("Detecção de Movimento", img)
+
+    if key == 115:  # seta para baixo
+        LINE_Y += 10
+    elif key == 119:  # seta para cima
+        LINE_Y -= 10
+    elif key == 27:  # ESC
         break
-    if cv2.waitKey(1) & 0xFF == ord('p'):
-        start = False
-    if cv2.waitKey(1) & 0xFF == ord('s'):
-        start = True
 
 cap.release()
 cv2.destroyAllWindows()

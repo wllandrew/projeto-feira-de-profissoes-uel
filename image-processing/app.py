@@ -5,8 +5,10 @@ sair de x para (128px,72px)
 import cv2
 import os
 
+RESOLUTIUON = (128, 128)
+
 def processingImage(pasta_origem, pasta_destino):
-    novo_tamanho = (128, 72)
+    novo_tamanho = RESOLUTIUON
 
     for nome_arquivo in os.listdir(pasta_origem):
         caminho_arquivo = os.path.join(pasta_origem, nome_arquivo)

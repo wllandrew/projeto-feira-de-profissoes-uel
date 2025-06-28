@@ -3,7 +3,7 @@ import numpy as np
 import time
 import os
 
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
 LINE_Y = 50 
 
@@ -41,11 +41,12 @@ while True:
         (x, y, w, h) = cv2.boundingRect(contour)
         # center_y = y + h // 2
         center_y = y
-
+        timestamp = int(time.time())
+        
         if center_y <= LINE_Y:
-            timestamp = int(time.time())
+           
 
-            name_file = f"captura_{timestamp}.jpg"
+            name_file = f"jumping_{timestamp}.jpg"
             local_dir = os.path.dirname(os.path.abspath(__file__))
 
             directory = os.path.join(local_dir, 'jumping')
@@ -56,7 +57,19 @@ while True:
             cv2.imwrite(arquivo, img)
             print(f"[INFO] Movimento detectado! Imagem salva: captura_{timestamp}.jpg")
             movimento_detectado = True
+        
+        elif timestamp % 2 == 0: 
+            
+            name_file = f"not_jumping_{timestamp}.jpg"
+            local_dir = os.path.dirname(os.path.abspath(__file__))
 
+            directory = os.path.join(local_dir, 'not_jumping')
+            os.makedirs(directory, exist_ok=True)
+
+            arquivo = os.path.join(directory, name_file)
+
+            cv2.imwrite(arquivo, img)
+            print(f"[INFO] Captura automática! Imagem salva: captura_{timestamp}.jpg")
 
         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
     

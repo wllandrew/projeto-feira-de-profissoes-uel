@@ -3,13 +3,12 @@ import numpy as np
 import time
 import os
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 
 LINE_Y = 50 
 
 success, img = cap.read()
 first_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-first_gray = cv2.GaussianBlur(first_gray, (21, 21), 0)
 
 while True:
     success, img = cap.read()
@@ -22,7 +21,8 @@ while True:
     key = cv2.waitKey(30) & 0xFF
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (21, 21), 0)
+    gray2 = cv2.resize(gray, (128,128))
+    gray2 = cv2.Canny(gray2, 155,105)
 
     frame_delta = cv2.absdiff(first_gray, gray)
     thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
@@ -54,7 +54,7 @@ while True:
 
             arquivo = os.path.join(directory, name_file)
 
-            cv2.imwrite(arquivo, img)
+            cv2.imwrite(arquivo, gray2)
             print(f"[INFO] Movimento detectado! Imagem salva: captura_{timestamp}.jpg")
             movimento_detectado = True
         
@@ -63,12 +63,12 @@ while True:
             name_file = f"not_jumping_{timestamp}.jpg"
             local_dir = os.path.dirname(os.path.abspath(__file__))
 
-            directory = os.path.join(local_dir, 'not_jumping')
-            os.makedirs(directory, exist_ok=True)
+            directory2 = os.path.join(local_dir, 'not_jumping')
+            os.makedirs(directory2, exist_ok=True)
 
-            arquivo = os.path.join(directory, name_file)
+            arquivo = os.path.join(directory2, name_file)
 
-            cv2.imwrite(arquivo, img)
+            cv2.imwrite(arquivo, gray2)
             print(f"[INFO] Captura automática! Imagem salva: captura_{timestamp}.jpg")
 
         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)

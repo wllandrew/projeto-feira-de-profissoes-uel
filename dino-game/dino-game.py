@@ -6,7 +6,17 @@ from sys import exit
 from random import randrange, choice
 import os
 
-jump_model = joblib.load('jump_model.pkl')
+# Add error handling for model loading
+try:
+    jump_model = joblib.load('model_second_iteration.pkl')
+    print("Model loaded successfully")
+except FileNotFoundError:
+    print("Error: jump_model.pkl not found!")
+    exit()
+except Exception as e:
+    print(f"Error loading model: {e}")
+    exit()
+
 msg = ''
 
 def convert_frame_to_model(Canny_image):
@@ -17,7 +27,7 @@ def convert_frame_to_model(Canny_image):
     '''
     #1° Step
     width = 128
-    height = 96
+    height = 128
     dim = (width, height)
     resized = cv2.resize(Canny_image, dim, interpolation = cv2.INTER_AREA)
     
@@ -40,12 +50,16 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = f'{(x, y)}'
 THIS_FOLDER = os.getcwd()
 
 pygame.init()
+pygame.mixer.init()  # Initialize mixer explicitly
 
 SCREEN_WIDTH = 840
 SCREEN_HEIGHT = 680
 
 WHITE = (255,255,255)
 BLACK = (0,0,0)
+RED = (255,0,0)
+GREEN = (0,255,0)
+BLUE = (0,0,255)
 
 FPS = 30
 GAME_SPEED = 10
@@ -58,25 +72,56 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 song = 0
 
 font = pygame.font.SysFont('comicsansms', 40, True, True)
-score_sound = pygame.mixer.Sound(os.path.join(THIS_FOLDER,'score_sound.wav'))
-score_sound.set_volume(0.2)
+
+# Add error handling for score sound
+try:
+    score_sound = pygame.mixer.Sound(os.path.join(THIS_FOLDER,'score_sound.wav'))
+    score_sound.set_volume(0.2)
+except (pygame.error, FileNotFoundError) as e:
+    print(f"Could not load score_sound.wav: {e}")
+    score_sound = None
+
+def create_colored_surface(width, height, color):
+    """Create a colored rectangle as fallback for missing images"""
+    surface = pygame.Surface((width, height))
+    surface.fill(color)
+    return surface
 
 class Dino(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.jump_sound = pygame.mixer.Sound(os.path.join(THIS_FOLDER,'jump_sound.wav'))
-        self.death_sound = pygame.mixer.Sound(os.path.join(THIS_FOLDER, 'death_sound.wav'))
+        
+        # Add error handling for sounds
+        try:
+            self.jump_sound = pygame.mixer.Sound(os.path.join(THIS_FOLDER,'jump_sound.wav'))
+        except (pygame.error, FileNotFoundError) as e:
+            print(f"Could not load jump_sound.wav: {e}")
+            self.jump_sound = None
+            
+        try:
+            self.death_sound = pygame.mixer.Sound(os.path.join(THIS_FOLDER, 'death_sound.wav'))
+        except (pygame.error, FileNotFoundError) as e:
+            print(f"Could not load death_sound.wav: {e}")
+            self.death_sound = None
         
         self.up = False
         self.stop = False
         self.xpos = 50
         self.ypos = (SCREEN_HEIGHT // 2) + 140
-        self.dino_imgs = [os.path.join(THIS_FOLDER,f'dinossaur{i}.png') for i in range(3)]
+        
+        # Try to load dino images with fallback
+        self.dino_imgs = []
+        for i in range(3):
+            try:
+                img_path = os.path.join(THIS_FOLDER, f'dinossaur{i}.png')
+                self.dino_imgs.append(pygame.image.load(img_path).convert_alpha())
+            except (pygame.error, FileNotFoundError):
+                print(f"Could not load dinossaur{i}.png, using colored rectangle")
+                self.dino_imgs.append(create_colored_surface(84, 84, GREEN))
 
         self.index = 0
-        self.image = pygame.image.load(self.dino_imgs[self.index]).convert_alpha()
+        self.image = self.dino_imgs[self.index]
         self.mask = pygame.mask.from_surface(self.image)
-
         self.image = pygame.transform.scale(self.image, (84, 84))
         self.rect = self.image.get_rect()
         self.rect[0], self.rect[1] = self.xpos, self.ypos
@@ -90,7 +135,8 @@ class Dino(pygame.sprite.Sprite):
             flying_dino.stop = True
             
     def jump(self):
-        self.jump_sound.play()
+        if self.jump_sound:
+            self.jump_sound.play()
         self.up = True
         
     def update(self):
@@ -112,7 +158,7 @@ class Dino(pygame.sprite.Sprite):
                 self.index = 0
             self.index += 0.25
 
-            self.image = pygame.image.load(self.dino_imgs[int(self.index)]).convert_alpha()
+            self.image = self.dino_imgs[int(self.index)]
             self.image = pygame.transform.scale(self.image, (128, 128))
             self.mask = pygame.mask.from_surface(self.image)
 
@@ -122,10 +168,20 @@ class Dino(pygame.sprite.Sprite):
 class Flying_dino(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()        
-        self.flying_dino_imgs = [os.path.join(THIS_FOLDER, f'fly_dino{i}.png') for i in range(2)]
+        
+        # Try to load flying dino images with fallback
+        self.flying_dino_imgs = []
+        for i in range(2):
+            try:
+                img_path = os.path.join(THIS_FOLDER, f'fly_dino{i}.png')
+                self.flying_dino_imgs.append(pygame.image.load(img_path).convert_alpha())
+            except (pygame.error, FileNotFoundError):
+                print(f"Could not load fly_dino{i}.png, using colored rectangle")
+                self.flying_dino_imgs.append(create_colored_surface(84, 84, BLUE))
+        
         self.stop = False
         self.index = 0
-        self.image = pygame.image.load(self.flying_dino_imgs[self.index]).convert_alpha()
+        self.image = self.flying_dino_imgs[self.index]
         self.mask = pygame.mask.from_surface(self.image)
         
         self.image = pygame.transform.scale(self.image, (84, 84))
@@ -139,7 +195,7 @@ class Flying_dino(pygame.sprite.Sprite):
                 self.index = 0
 
             self.index += 0.25
-            self.image = pygame.image.load(self.flying_dino_imgs[int(self.index)]).convert_alpha()
+            self.image = self.flying_dino_imgs[int(self.index)]
             self.image = pygame.transform.scale(self.image, (128, 128))
             self.mask = pygame.mask.from_surface(self.image)
         else:
@@ -148,9 +204,14 @@ class Flying_dino(pygame.sprite.Sprite):
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.obstacle_imgs = [os.path.join(THIS_FOLDER,'obstacle0.png')]
-
-        self.image = pygame.image.load(self.obstacle_imgs[0]).convert_alpha()
+        
+        # Try to load obstacle image with fallback
+        try:
+            self.image = pygame.image.load(os.path.join(THIS_FOLDER,'obstacle0.png')).convert_alpha()
+        except (pygame.error, FileNotFoundError):
+            print("Could not load obstacle0.png, using colored rectangle")
+            self.image = create_colored_surface(84, 84, RED)
+            
         self.mask = pygame.mask.from_surface(self.image)
         self.image = pygame.transform.scale(self.image, (84, 84))
         self.rect = self.image.get_rect()
@@ -160,9 +221,14 @@ class Obstacle(pygame.sprite.Sprite):
 class Clouds(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.cloud_imgs = [os.path.join(THIS_FOLDER,'clouds0.png')]
-
-        self.image = pygame.image.load(self.cloud_imgs[0]).convert_alpha()
+        
+        # Try to load cloud image with fallback
+        try:
+            self.image = pygame.image.load(os.path.join(THIS_FOLDER,'clouds0.png')).convert_alpha()
+        except (pygame.error, FileNotFoundError):
+            print("Could not load clouds0.png, using colored rectangle")
+            self.image = create_colored_surface(148, 148, WHITE)
+            
         self.image = pygame.transform.scale(self.image, (148, 148))
         self.rect = self.image.get_rect()
         self.rect[0], self.rect[1] = (SCREEN_WIDTH // 2) + randrange(-400, 400, 100) , (SCREEN_HEIGHT // 2) - randrange(200, 400, 100)
@@ -176,9 +242,14 @@ class Clouds(pygame.sprite.Sprite):
 class Floor(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.floor_imgs = [os.path.join(THIS_FOLDER,'floor0.png')]
-
-        self.image = pygame.image.load(self.floor_imgs[0]).convert_alpha()
+        
+        # Try to load floor image with fallback
+        try:
+            self.image = pygame.image.load(os.path.join(THIS_FOLDER,'floor0.png')).convert_alpha()
+        except (pygame.error, FileNotFoundError):
+            print("Could not load floor0.png, using colored rectangle")
+            self.image = create_colored_surface(64, 64, BLACK)
+            
         self.image = pygame.transform.scale(self.image, (64, 64))
         self.rect = self.image.get_rect()
         self.rect[0], self.rect[1] = 0 , SCREEN_HEIGHT // 2  + 200
@@ -301,7 +372,8 @@ while True:
     if GAME_SPEED != 0:
         points += 1
         if (points % 100) == 0:
-            score_sound.play()
+            if score_sound:
+                score_sound.play()
             if GAME_SPEED == 46:
                 pass
             else:
@@ -312,7 +384,8 @@ while True:
             song = 2
         else:
             song += 1
-        dino.jump_sound.stop()
+        if dino.jump_sound:
+            dino.jump_sound.stop()
         txt = ['GAME OVER', 'Press R to play again']
         line1 = font.render(txt[0], True, BLACK)
         line2 = font.render(txt[1], True, BLACK)
@@ -321,7 +394,8 @@ while True:
         GAME_OVER = True
 
     if song == 1:
-        dino.death_sound.play()
+        if dino.death_sound:
+            dino.death_sound.play()
 
     pygame.display.flip()
 

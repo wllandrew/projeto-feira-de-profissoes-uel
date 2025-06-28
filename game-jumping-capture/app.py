@@ -20,7 +20,6 @@ model = joblib.load('hog_svm_model.pkl')
 last_capture_time = 0
 capture_interval = 0.2  # 200 ms
 
-
 def getCamResolution(cap):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -62,6 +61,10 @@ def predict(feature):
 success, img = cap.read()
 img = imageProcess(img)
 
+last_prediction_time = time.time()
+capture_interval = 0.2
+
+
 isJumping = False
 # main loop
 while True:
@@ -70,23 +73,21 @@ while True:
     if not success:
         break
 
-    processed_img = imageProcess(img)
-    feature, hog_img = extractImagesHog(processed_img)
+    now = time.time()
+    if now - last_prediction_time >= capture_interval:
+        processed = imageProcess(img)
+        feature, hog_img = extractImagesHog(processed)
 
-    cv2.imshow('HOG', cv2.resize(hog_img, getCamResolution(cap)))
+        if feature is not None:
+            isJumping = bool(predict(feature)[0])
 
-    if feature is not None:
-        if predict(feature)[0] == 1:
-            isJumping = True
-        else:
-            isJumping = False
-    else:
-        camFail = True
+        last_prediction_time = now
 
-    if not camFail:
-        cv2.putText(img, f'PULANDO: {isJumping}', (480//2, 50), cv2.FONT_HERSHEY_SIMPLEX,1,(255, 0, 0),3)
-    else:
-        cv2.putText(img, f'Erro', (480//2, 50), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),3)
+        cv2.imshow('HOG', cv2.resize(hog_img, getCamResolution(cap)))
+
+    label = f"PULANDO: {isJumping}"
+    color = (255, 0, 0) if isJumping else (0, 0, 255)
+    cv2.putText(img, label, (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
 
     cv2.imshow('Video', img)
 

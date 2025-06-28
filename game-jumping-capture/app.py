@@ -6,9 +6,9 @@ from skimage.feature import hog
 import time
 
 # Configurações
-CAMERA = 0 # Saber qual de camera hardware 
+CAMERA = 1 # Saber qual de camera hardware 
 # Configurações de tratamento de imagem
-RESOLUTION = (38, 38)
+RESOLUTION = (128, 128)
 # HOG configs
 ORIENTATIONS = 9
 PIXELS_PER_CELL = (8, 8)
@@ -17,9 +17,7 @@ CELLS_PER_BLOCK = (2, 2)
 # Carrega a camera
 cap = cv2.VideoCapture(CAMERA)
 # Carrega o modelo svm treinado
-model = joblib.load('model_first_iteration.pkl')
-last_capture_time = 0
-capture_interval = 0.2  # 200 ms
+model = joblib.load('svm_model_test.pkl')
 
 def getCamResolution(cap):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -63,8 +61,7 @@ success, img = cap.read()
 img = imageProcess(img)
 
 last_prediction_time = time.time()
-capture_interval = 0.2
-
+capture_interval = 0.1
 
 isJumping = False
 # main loop
@@ -80,7 +77,7 @@ while True:
         # feature, hog_img = extractImagesHog(processed)
 
         if processed is not None:
-            pred = predict(np.ravel(processed))
+            pred = predict(processed.flatten().astype(np.uint8))
             isJumping = bool(pred[0])
  
         last_prediction_time = now

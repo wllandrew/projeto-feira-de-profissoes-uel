@@ -4,9 +4,10 @@ import numpy as np
 import joblib
 from skimage.feature import hog
 import time
+import keyboard
 
 # Configurações
-CAMERA = 1 # Saber qual de camera hardware 
+CAMERA = 2 # Saber qual de camera hardware 
 # Configurações de tratamento de imagem
 RESOLUTION = (128, 128)
 # HOG configs
@@ -60,8 +61,10 @@ def predict(feature):
 success, img = cap.read()
 img = imageProcess(img)
 
+
+
 last_prediction_time = time.time()
-capture_interval = 0.1
+capture_interval = 0.2
 
 isJumping = False
 # main loop
@@ -79,10 +82,14 @@ while True:
         if processed is not None:
             # processed = processed/255.0
             reshaped = np.reshape(processed, (processed.shape[0] * processed.shape[1]))
-            pred = predict(reshaped)
+            pred = predict(reshaped)                
             # pred = predict(processed.flatten().astype(np.uint8))
             # print(pred)
             isJumping = bool(pred[0])
+            if isJumping:
+                keyboard.press('space')
+            else:
+                keyboard.release('space')
  
         last_prediction_time = now
 

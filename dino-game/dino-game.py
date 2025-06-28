@@ -5,10 +5,21 @@ import pygame
 from sys import exit
 from random import randrange, choice
 import os
+from skimage.feature import hog
+
+# Configurações
+CAMERA = 0 
+# Saber qual de camera hardware 
+# Configurações de tratamento de imagem
+RESOLUTION = (128, 128)
+# HOG configs
+ORIENTATIONS = 9
+PIXELS_PER_CELL = (8, 8)
+CELLS_PER_BLOCK = (2, 2)
 
 # Add error handling for model loading
 try:
-    jump_model = joblib.load('model_second_iteration.pkl')
+    model = joblib.load('svm_model_test_2.pkl')
     print("Model loaded successfully")
 except FileNotFoundError:
     print("Error: jump_model.pkl not found!")
@@ -19,23 +30,42 @@ except Exception as e:
 
 msg = ''
 
-def convert_frame_to_model(Canny_image):
-    '''
-    1° step = resize the image to (height=96, width=128) 
-    2° step = reshape the image to (-1, img.size)
-    3° step = give the image to the model
-    '''
-    #1° Step
-    width = 128
-    height = 128
-    dim = (width, height)
-    resized = cv2.resize(Canny_image, dim, interpolation = cv2.INTER_AREA)
-    
-    #2° Step
-    reshaped_image = resized.reshape(-1, resized.size)
-    
-    #3° Step
-    return jump_model.predict(reshaped_image)
+def getCamResolution(cap):
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    return width, height
+
+def imageResizeToShow(img):
+    return cv2.resize(img, getCamResolution(cap))
+
+def imageProcess(img):
+    if img is None:
+        return 
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # gray = cv2.GaussianBlur(gray, (21, 21), 0)
+    canny = cv2.Canny(gray, 155, 105)
+    img = cv2.resize(canny, RESOLUTION)
+
+    return img
+
+def extractImagesHog(img):
+    if img is None:
+        return
+
+    features, hog_img = hog(
+        img,
+        orientations=ORIENTATIONS,
+        pixels_per_cell=PIXELS_PER_CELL,
+        cells_per_block=CELLS_PER_BLOCK,
+        block_norm='L2-Hys',
+        visualize=True,
+        feature_vector=True
+    )
+
+    return features, hog_img
+
+def predict(feature):
+    return model.predict([feature])
     
 cap = cv2.VideoCapture(0)
 
@@ -286,21 +316,22 @@ clock = pygame.time.Clock()
 
 obstacle_choice = choice([obstacle, flying_dino])
 
+isJumping = False
+
 while True:
     sucess, img = cap.read()
     
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgCanny = cv2.Canny(gray, 155, 105)
-        
-    model_prediction = convert_frame_to_model(imgCanny)
-        
-    if model_prediction == 0:
-        msg = 'Not jumping'
-    else:
-        msg = 'Jumping'
+    if not sucess:
+        break
+    
+    processed = imageProcess(img)
+    feature, hog_img = extractImagesHog(processed)
+
+    if feature is not None:
+        msg = bool(predict(feature[0]))
             
-    cv2.putText(imgCanny, f'{msg}', (480//2, 50), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),3) #msg, origin, font, scale_font, color, thickness
-    cv2.imshow('Canny', imgCanny)
+    cv2.putText(processed, f'{msg}', (480//2, 50), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),3) #msg, origin, font, scale_font, color, thickness
+    cv2.imshow('Canny', processed)
                 
     if cv2.waitKey(1) & 0xff == ord('q'):
         break
@@ -356,7 +387,7 @@ while True:
     text = font.render(f'{points}', True, BLACK)
     screen.blit(text, (700, 40))
     
-    if model_prediction == 1:
+    if isJumping:
         if dino.rect[1] < dino.ypos:
             pass
         else:

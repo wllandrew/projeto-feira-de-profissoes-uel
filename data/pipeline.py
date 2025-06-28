@@ -13,7 +13,7 @@ Pipeline para converter imagens com HOG e salvar como CSV rotulado.
 
 # Configurações da função de extrair o hog das imagens
 IMAGE_SIZE = (128, 128)
-ORIENTATIONS = 9
+ORIENTATIONS = 8
 PIXELS_PER_CELL = (8, 8)
 CELLS_PER_BLOCK = (2, 2)
 
@@ -53,9 +53,10 @@ def imagesDataset(folder_path, label):
             continue
 
         img = cv2.resize(img, IMAGE_SIZE)
+        reshaped = np.reshape(img, (1, img.shape[0] * img.shape[1]))
        
-        vector = img.flatten().astype(np.uint8) # Alerta com essa parte
-        dataset.append(np.append(vector, label))
+        # vector = img.flatten().astype(np.uint8) # Alerta com essa parte
+        dataset.append(np.append(reshaped, label))
     return np.array(dataset)
 
 
@@ -67,12 +68,17 @@ NO_JUMPING_PATH = os.path.join(os.getcwd(), 'no-jumping')
 data_jumping = imagesDataset(JUMPING_PATH, label=1)
 data_no_jumping = imagesDataset(NO_JUMPING_PATH, label=0)
 
+print(data_jumping)
+print(data_no_jumping)
+
 dataset_total = np.vstack([data_jumping, data_no_jumping])
 df = pd.DataFrame(dataset_total)
 
 num_features = df.shape[1] - 1
 df.columns = [f'{i}' for i in range(num_features)] + ['Jumping']
 
-csv_path = 'jumping-dataset.csv'
+print(df)
+
+csv_path = 'dataset.csv'
 df.to_csv(csv_path, index=False)
 print(f"CSV salvo como {csv_path} | Total: {len(df)} amostras")

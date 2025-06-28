@@ -17,7 +17,7 @@ CELLS_PER_BLOCK = (2, 2)
 # Carrega a camera
 cap = cv2.VideoCapture(CAMERA)
 # Carrega o modelo svm treinado
-model = joblib.load('svm_model_test.pkl')
+model = joblib.load('svm_model_test_2.pkl')
 
 def getCamResolution(cap):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -74,10 +74,14 @@ while True:
     now = time.time()
     if now - last_prediction_time >= capture_interval:
         processed = imageProcess(img)
-        # feature, hog_img = extractImagesHog(processed)
+        # processed, hog_img = extractImagesHog(processed)
 
         if processed is not None:
-            pred = predict(processed.flatten().astype(np.uint8))
+            # processed = processed/255.0
+            reshaped = np.reshape(processed, (processed.shape[0] * processed.shape[1]))
+            pred = predict(reshaped)
+            # pred = predict(processed.flatten().astype(np.uint8))
+            # print(pred)
             isJumping = bool(pred[0])
  
         last_prediction_time = now

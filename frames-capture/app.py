@@ -1,9 +1,19 @@
 import cv2
-import numpy as np
 import time
 import os
 
-cap = cv2.VideoCapture(2)
+def saveImageJPG(directory, image, file_name):
+    local_dir = os.path.dirname(os.path.abspath(__file__))
+    dir = os.path.join(local_dir, directory)
+    os.makedirs(dir, exist_ok=True)
+
+    file = f"{file_name}.jpg"
+    path = os.path.join(dir, file)
+    cv2.imwrite(path, image)
+
+    print(f"[INFO] Imagem salva: {file}")
+
+cap = cv2.VideoCapture(0)
 
 LINE_Y = 50 
 LINE_MINY = 100
@@ -11,79 +21,54 @@ LINE_MINY = 100
 success, img = cap.read()
 first_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+capturing = False
 while True:
     success, img = cap.read()
     if not success:
         break
+    key = cv2.waitKey(30) & 0xFF
 
     movimento_detectado = False
     
     LINE_Y = max(0, min(LINE_Y, img.shape[0] - 1))
     LINE_MINY = max(0, min(LINE_MINY, img.shape[0] - 1))
-    key = cv2.waitKey(30) & 0xFF
+    cv2.line(img, (0, LINE_Y), (img.shape[1], LINE_Y), (0, 255, 255), 2)
+    cv2.line(img, (0, LINE_MINY), (img.shape[1], LINE_MINY), (255, 0, 0), 2)
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.resize(gray, (128,128))
-    gray2 = cv2.Canny(gray2, 155,105)
+    save_img = cv2.resize(gray, (128,128))
+    save_img = cv2.Canny(save_img, 155,105)
 
     frame_delta = cv2.absdiff(first_gray, gray)
     thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
     thresh = cv2.dilate(thresh, None, iterations=2)
-
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    cv2.line(img, (0, LINE_Y), (img.shape[1], LINE_Y), (0, 255, 255), 2)
-    cv2.line(img, (0, LINE_MINY), (img.shape[1], LINE_MINY), (255, 0, 0), 2)
-
-
-    movimento_detectado = False
-
+    
     for contour in contours:
         if cv2.contourArea(contour) < 1000:
             continue
 
         (x, y, w, h) = cv2.boundingRect(contour)
-        # center_y = y + h // 2
-        center_y = y
-        timestamp = int(time.time() * 10)
-        
-        if center_y <= LINE_Y:
-           
-
-            name_file = f"jumping_{timestamp}.jpg"
-            local_dir = os.path.dirname(os.path.abspath(__file__))
-
-            directory = os.path.join(local_dir, 'jumping')
-            os.makedirs(directory, exist_ok=True)
-
-            arquivo = os.path.join(directory, name_file)
-
-            cv2.imwrite(arquivo, gray2)
-            print(f"[INFO] Movimento detectado! Imagem salva: captura_{timestamp}.jpg")
-            movimento_detectado = True
-        
-        elif timestamp % 2 == 0 and center_y >= LINE_MINY:
-        
-            
-            name_file = f"not_jumping_{timestamp}.jpg"
-            local_dir = os.path.dirname(os.path.abspath(__file__))
-
-            directory2 = os.path.join(local_dir, 'not_jumping')
-            os.makedirs(directory2, exist_ok=True)
-
-            arquivo = os.path.join(directory2, name_file)
-
-            cv2.imwrite(arquivo, gray2)
-            print(f"[INFO] Captura automática! Imagem salva: captura_{timestamp}.jpg")
-
         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    
+
+        if capturing:
+            timestamp = int(time.time())
+
+            if y <= LINE_Y: # Passou da linha de pulo
+                saveImageJPG('jumping', save_img, f'jumping_{timestamp}')
+                movimento_detectado = True
+            
+            elif timestamp % 2 == 0 and y >= LINE_MINY: # não passou da linha mínima
+                saveImageJPG('not-jumping', save_img, f'not_jumping_{timestamp}')
+
     if not movimento_detectado:
         first_gray = gray.copy()
 
     cv2.imshow("Detecção de Movimento", img)
 
-    if key == 115:  # seta para baixo
+    if key == ord('p'):
+        capturing = not capturing
+    elif key == 115:  # seta para baixo
         LINE_Y += 10
     elif key == 119:  # seta para cima
         LINE_Y -= 10

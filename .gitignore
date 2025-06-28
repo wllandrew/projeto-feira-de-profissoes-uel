@@ -62,3 +62,6 @@ docs/_build/
 # PyBuilder
 target/
 maildir
+
+# Jupyter
+**/.ipynb_checkpoints/

@@ -1,5 +1,6 @@
 import os
 import cv2
+import numpy as np
 import joblib
 from skimage.feature import hog
 import time
@@ -7,7 +8,7 @@ import time
 # Configurações
 CAMERA = 0 # Saber qual de camera hardware 
 # Configurações de tratamento de imagem
-RESOLUTION = (128, 128)
+RESOLUTION = (38, 38)
 # HOG configs
 ORIENTATIONS = 9
 PIXELS_PER_CELL = (8, 8)
@@ -16,7 +17,7 @@ CELLS_PER_BLOCK = (2, 2)
 # Carrega a camera
 cap = cv2.VideoCapture(CAMERA)
 # Carrega o modelo svm treinado
-model = joblib.load('hog_svm_model.pkl')
+model = joblib.load('model_first_iteration.pkl')
 last_capture_time = 0
 capture_interval = 0.2  # 200 ms
 
@@ -76,14 +77,15 @@ while True:
     now = time.time()
     if now - last_prediction_time >= capture_interval:
         processed = imageProcess(img)
-        feature, hog_img = extractImagesHog(processed)
+        # feature, hog_img = extractImagesHog(processed)
 
-        if feature is not None:
-            isJumping = bool(predict(feature)[0])
-
+        if processed is not None:
+            pred = predict(np.ravel(processed))
+            isJumping = bool(pred[0])
+ 
         last_prediction_time = now
 
-        cv2.imshow('HOG', cv2.resize(hog_img, getCamResolution(cap)))
+        cv2.imshow('IMAGEM PROCESSADA', cv2.resize(processed, getCamResolution(cap)))
 
     label = f"PULANDO: {isJumping}"
     color = (255, 0, 0) if isJumping else (0, 0, 255)

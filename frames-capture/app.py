@@ -20,7 +20,7 @@ def processImageDfContours(img):
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(2)
 
 LINE_Y = 50 
 LINE_MINY = 100
@@ -53,7 +53,7 @@ while True:
             if cv2.contourArea(contour) < 1000:
                 continue
 
-            timestamp = int(time.time() * 10)
+            timestamp = int(time.time())
 
             (x, y, w, h) = cv2.boundingRect(contour)
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)

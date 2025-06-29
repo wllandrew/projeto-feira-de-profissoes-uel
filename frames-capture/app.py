@@ -20,7 +20,7 @@ def processImageDfContours(img):
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     return contours
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 LINE_Y = 50 
 LINE_MINY = 100
@@ -39,14 +39,12 @@ while True:
     
     LINE_Y = max(0, min(LINE_Y, img.shape[0] - 1))
     LINE_MINY = max(0, min(LINE_MINY, img.shape[0] - 1))
-    cv2.line(img, (0, LINE_Y), (img.shape[1], LINE_Y), (0, 255, 255), 2)
-    cv2.line(img, (0, LINE_MINY), (img.shape[1], LINE_MINY), (255, 0, 0), 2)
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    save_img = cv2.resize(gray, (128,128))
+    save_img = cv2.Canny(save_img, 155,105)
 
     if capturing:
-        save_img = cv2.resize(gray, (128,128))
-        save_img = cv2.Canny(save_img, 155,105)
 
         contours = processImageDfContours(gray)
         contours_up = False
@@ -55,7 +53,7 @@ while True:
             if cv2.contourArea(contour) < 1000:
                 continue
 
-            timestamp = int(time.time())
+            timestamp = int(time.time() * 10)
 
             (x, y, w, h) = cv2.boundingRect(contour)
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -71,7 +69,10 @@ while True:
     if not movimento_detectado:
         first_gray = gray.copy()
 
+    cv2.line(img, (0, LINE_Y), (img.shape[1], LINE_Y), (0, 255, 255), 2)
+    cv2.line(img, (0, LINE_MINY), (img.shape[1], LINE_MINY), (255, 0, 0), 2)
     cv2.imshow("Detectando Movimento", img)
+    cv2.imshow("Imagem processada para salvar", cv2.resize(save_img, (128*3, 128*3)))
 
     if key == ord('p'):
         capturing = not capturing

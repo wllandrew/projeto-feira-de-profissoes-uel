@@ -25,13 +25,3 @@ Ideal para estudos de visão computacional, machine learning e aplicações lúd
 
 ---
 
-## Propósito dos módulos
-
-- **frames-capture**: Captura e salva imagens da webcam para compor o dataset de treinamento.
-- **image-augmentation**: Aplica técnicas de aumento de dados para expandir e diversificar o dataset.
-- **image-processing**: Redimensiona e padroniza imagens para uso em modelos de machine learning.
-- **data**: Scripts para converter imagens em CSV rotulado e notebooks para pipeline de preparação dos dados.
-- **model**: Notebooks para treinamento, validação e avaliação do modelo SVM.
-- **dino-game**: Jogo interativo controlado por detecção de pulos em tempo real.
-
-Consulte cada arquivo `.md` correspondente para detalhes e funções de cada módulo.

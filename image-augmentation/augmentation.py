@@ -6,19 +6,17 @@ import albumentations as A
 
 os.system('')
 
-INPUT_DIR = "jumping-redimensionado"
-OUTPUT_DIR = "augmented-jumping"
-AUGMENT = 15
+INPUT_DIR = "not_jumping"
+OUTPUT_DIR = "augmented-not-jumping"
+AUGMENT = 1
 RESOLUTION = (128, 128)  
-ROTULO = 1  # 'jumping' = 1
-CSV_NAME = 'dataset-jumping.csv'
 
 os.makedirs(OUTPUT_DIR, exist_ok=True) 
 
 # Augmentation pipeline
 transform = A.Compose([
     A.HorizontalFlip(p=0.5),
-    A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.1, rotate_limit=4, border_mode=cv2.BORDER_REFLECT_101, p=0.7),
+    A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.02, rotate_limit=4, p=0.7),
     A.Resize(RESOLUTION[1], RESOLUTION[0])
 ])
 

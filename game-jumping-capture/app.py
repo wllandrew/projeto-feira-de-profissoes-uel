@@ -7,7 +7,7 @@ import time
 import keyboard
 
 # Configurações
-CAMERA = 2 # Saber qual de camera hardware 
+CAMERA = 0 # Saber qual de camera hardware 
 # Configurações de tratamento de imagem
 RESOLUTION = (128, 128)
 # HOG configs

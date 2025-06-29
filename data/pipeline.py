@@ -61,7 +61,7 @@ def imagesDataset(folder_path, label):
 
 
 JUMPING_PATH = os.path.join(os.getcwd(), 'jumping')
-NO_JUMPING_PATH = os.path.join(os.getcwd(), 'no-jumping')
+NO_JUMPING_PATH = os.path.join(os.getcwd(), 'not_jumping')
 
 # data_jumping = imagesHogDataset(JUMPING_PATH, label=1)
 # data_no_jumping = imagesHogDataset(NO_JUMPING_PATH, label=0)
@@ -79,6 +79,6 @@ df.columns = [f'{i}' for i in range(num_features)] + ['Jumping']
 
 print(df)
 
-csv_path = 'dataset.csv'
+csv_path = 'dataset_leo.csv'
 df.to_csv(csv_path, index=False)
 print(f"CSV salvo como {csv_path} | Total: {len(df)} amostras")

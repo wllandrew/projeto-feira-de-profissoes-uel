@@ -1,15 +1,11 @@
 # Documentação do módulo: model
 
-## Arquivo: svm-model.ipynb
+## Propósito
+Treinar, validar e avaliar o modelo SVM para classificar imagens entre "Jumping" e "Not Jumping".
 
-Notebook responsável pelo treinamento e avaliação de um modelo SVM para classificar imagens entre "Jumping" e "Not Jumping", respectivamente, 1 e 0.
+## Funções principais
+- Notebook `svm-model.ipynb`: Carrega o dataset rotulado, prepara os dados, divide em treino e teste, treina o modelo SVM e avalia a acurácia.
+- Permite ajustes e validação do modelo para melhorar a performance.
 
-### Funcionalidades principais:
-- Carrega o dataset rotulado em CSV.
-- Prepara os dados de entrada (X) e os rótulos (y).
-- Divide os dados em treino e teste.
-- Treina um modelo SVM usando scikit-learn.
-- Avalia a acurácia do modelo.
-
-### Uso
+## Uso
 Utilize este notebook para treinar e validar o modelo de classificação de pulos a partir das imagens processadas.

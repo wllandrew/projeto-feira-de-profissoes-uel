@@ -16,4 +16,3 @@ Cada documentação possui um link para retornar a esta página.
 ---
 
 Ideal para estudos de visão computacional, machine learning e aplicações lúdicas. Consulte cada módulo acima para detalhes de uso, exemplos e dicas práticas.
-

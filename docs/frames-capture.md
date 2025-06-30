@@ -42,4 +42,3 @@ Este módulo é responsável por capturar imagens da webcam para criar datasets 
 4. Realize movimentos de pulo e não pulo na frente da câmera.
 5. As imagens serão salvas automaticamente nas pastas corretas.
 6. Pressione `ESC` para sair.
-

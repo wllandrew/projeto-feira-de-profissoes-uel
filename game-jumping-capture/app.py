@@ -7,7 +7,7 @@ import time
 import keyboard
 
 # Configurações
-CAMERA = 2 # Saber qual de camera hardware 
+CAMERA = 1 # Saber qual de camera hardware 
 # Configurações de tratamento de imagem
 RESOLUTION = (128, 128)
 # HOG configs
@@ -18,7 +18,7 @@ CELLS_PER_BLOCK = (2, 2)
 # Carrega a camera
 cap = cv2.VideoCapture(CAMERA)
 # Carrega o modelo svm treinado
-model = joblib.load('svm_model_test_2.pkl')
+model = joblib.load('grid_best_estimator')
 
 def getCamResolution(cap):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

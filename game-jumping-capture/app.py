@@ -1,127 +1,150 @@
-import os
 import cv2
-import numpy as np
-import joblib
-from skimage.feature import hog
-import time
+import threading
 import keyboard
-import keras
+import time
 
-# Configurações
-CAMERA = 2 # Saber qual de camera hardware 
-# Configurações de tratamento de imagem
+# Configurações do programa
+CAMERA = 1
 RESOLUTION = (128, 128)
-# HOG configs
-ORIENTATIONS = 9
-PIXELS_PER_CELL = (8, 8)
-CELLS_PER_BLOCK = (2, 2)
+NORMALIZATION = 255.0
+MODEL = 'NN' # SVM or NN
+MODEL_PATH = 'nn_model_super.keras'
+NN_MIN = 0.96 # S Apenas se for NN model
+PREDICTS_PER_SECOND = 10 # Previsões que o modelo faz por segundo
+CAM_FPS = 60 # Frames por segundo da camera
 
-# Carrega a camera                        
-cap = cv2.VideoCapture(CAMERA)                
-# Carrega o modelo svm treinado
-# model = joblib.load('svm_no_noise_test_1.pkl') 
-model = keras.models.load_model("nn_model.keras")
-
-
-def getCamResolution(cap):
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    return width, height      
-
-def imageResizeToShow(img):
-    return cv2.resize(img, getCamResolution(cap))
-
-def imageProcess(img):
-    if img is None:
-        return 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    # gray = cv2.GaussianBlur(gray, (21, 21), 0)
-    canny = cv2.Canny(gray, 155, 105)
-    img = cv2.resize(canny, RESOLUTION)
-
-    return img
-
-def extractImagesHog(img):
-    if img is None:
-        return
-
-    features, hog_img = hog(
-        img,
-        orientations=ORIENTATIONS,
-        pixels_per_cell=PIXELS_PER_CELL,
-        cells_per_block=CELLS_PER_BLOCK,
-        block_norm='L2-Hys',
-        visualize=True,
-        feature_vector=True
-    )
-
-    return features, hog_img
-
-def predict(feature):
-    return model.predict(feature)
-
-# First test init cap
-success, img = cap.read()
-img = imageProcess(img)
-
-
-
-last_prediction_time = time.time()
-capture_interval = 0.2
-
+predictFrame = None
 isJumping = False
+pause = True
+running = True
+lock = threading.Lock()
+modelLoading = True
 
-pause = False
-# main loop
-while True:
-    camFail = False
-    success, img = cap.read()
-    if not success:
-        break
+def predict_model(model_type: str, model):
+    if model_type.upper() == 'SVM':
+        def predictJump(img):
+            img = cv2.resize(img, RESOLUTION)
+            reshaped = (img / NORMALIZATION).reshape(-1)
+            return bool(model.predict([reshaped])[0])
+        return predictJump
+    elif model_type.upper() == 'NN':
+        def predictJump(img):
+            img = cv2.resize(img, RESOLUTION)
+            reshaped = (img / NORMALIZATION).reshape(1, -1).astype('float32')
+            return model.predict(reshaped)[0][0] > NN_MIN
+        return predictJump
+    else:
+        raise ValueError("Modelo não suportado: escolha 'SVM' ou 'NN'.")
+
+def imageProcess(img): 
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    canny = cv2.Canny(gray, 155, 105)
+    return canny
+
+def classifier_thread():
+    global isJumping, predictFrame, running, pause, modelLoading
+
+    if MODEL == 'SVM':
+        import joblib
+        load_model = lambda path: joblib.load(path)
+
+    elif MODEL == 'NN':
+        from tensorflow import keras
+        load_model = lambda path: keras.models.load_model(path)
+    else:
+        raise ValueError("Modelo não suportado")
+    
+    model = load_model(MODEL_PATH)
+    predictJump = predict_model(MODEL, model)
+    
+    while predictFrame is None:
+        pass
+    if predictJump(predictFrame): # Primeiro predict para loadingModel
+        modelLoading = False
 
 
-    key = cv2.waitKey(1) & 0xFF
+    interval = 1.0 / PREDICTS_PER_SECOND
+    while running:  
+        start_time = time.time()
 
-    now = time.time()
-    if now - last_prediction_time >= capture_interval:
+        with lock:
+            if predictFrame is None:
+                continue
+
+        pred = predictJump(predictFrame)
+
+        if pred:
+            isJumping = True
+        else:
+            isJumping = False                   
+                  
+        if isJumping and not pause:         
+            keyboard.press('space')
+        else:
+            keyboard.release('space')
+        
+        elapsed = time.time() - start_time
+        remaining_time = interval - elapsed
+        if remaining_time > 0:
+            time.sleep(remaining_time)
+
+def camera_thread():
+    global predictFrame, running, pause, modelLoading
+
+    cap = cv2.VideoCapture(CAMERA)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) * 0.6)
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) * 0.6)
+    
+    cv2.namedWindow("Video")
+    cv2.namedWindow("Video_process")
+    cv2.moveWindow("Video", 100, 50)
+    cv2.moveWindow("Video_process", 100, 400)
+
+    frame_interval = 1.0 / CAM_FPS
+    while running:
+        start_time = time.time()
+
+        success, img = cap.read()
+        if not success:
+            continue
+
+        img = cv2.resize(img, (width, height))
         processed = imageProcess(img)
-        # processed, hog_img = extractImagesHog(processed)
 
-        if processed is not None:
-            # processed = processed/255.0
-            reshaped = np.reshape(processed, (processed.shape[0] * processed.shape[1]))
-            # reshaped = (processed).reshape(-1) 
-            pred = predict(reshaped.reshape(1, -1))  
-            print(pred)             
-            # pred = predict(processed.flatten().astype(np.uint8))
-            # print(pred)
-            print(pred.shape)
-            if pred[0][1] > 0.90:
-                isJumping = True
-            else:
-                isJumping = False
-                
-            if not pause:
-                if isJumping:
-                    keyboard.press('space')
-                else:
-                    keyboard.release('space')
- 
-        last_prediction_time = now
+        with lock:
+            predictFrame = processed.copy()        
 
-        cv2.imshow('IMAGEM PROCESSADA', cv2.resize(processed, getCamResolution(cap)))
+        color = (0, 255, 0) if isJumping else (0, 0, 255)
 
-    label = f"PULANDO: {isJumping}"
-    color = (255, 0, 0) if isJumping else (0, 0, 255)
-    cv2.putText(img, label, (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 3)
+        cv2.putText(img, f"{'Pulando' if isJumping else 'No chao'}", (20, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+        if modelLoading:
+            cv2.putText(img, f"Carregando modelo...", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-    cv2.imshow('Video', img)
+        cv2.imshow("Video", img)
+        cv2.imshow("Video_process", processed)
 
-    if key == ord('q'):
-        break
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            running = False 
+        elif key == ord('p'):
+            pause = not pause
 
-    if key == ord('p'):
-        pause = not pause
+        elapsed = time.time() - start_time
+        remaining_time = frame_interval - elapsed
+        if remaining_time > 0:
+            time.sleep(remaining_time)
 
-cap.release()
-cv2.destroyAllWindows()
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    thread_cam = threading.Thread(target=camera_thread)
+    thread_cls = threading.Thread(target=classifier_thread)
+
+    thread_cam.start()
+    thread_cls.start()
+
+    thread_cam.join()
+    thread_cls.join()
+
+    keyboard.release('space')

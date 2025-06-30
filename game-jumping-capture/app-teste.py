@@ -17,14 +17,14 @@ CELLS_PER_BLOCK = (2, 2)
 capture_interval = 0.2 
 
 # model = joblib.load('grid_brest_estimator.pkl')  
-model = keras.models.load_model("nn_model_2.keras")
+model = keras.models.load_model("nn_model_super.keras")
 
 
  
 frame = None
 lock = threading.Lock()
 isJumping = False
-pause = False
+pause = True
 running = True
 
 def imageProcess(img):
@@ -42,8 +42,8 @@ def predict(img):
     # feature = img.flatten()
   
     # reshaped = img.reshape(-1) 
-    # reshaped = (img / 255.0).reshape(-1)
-    reshaped = np.reshape(img, (img.shape[0] * img.shape[1]))  
+    reshaped = (img / 255.0).reshape(-1)
+    # reshaped = np.reshape(img, (img.shape[0] * img.shape[1]))  
     return model.predict(reshaped.reshape(1, -1))[0]
 
 
@@ -63,8 +63,9 @@ def classifier_thread():
         processed = imageProcess(img_copy)
         pred = predict(processed)
 
+            
         print(pred)
-        if pred[1] > 0.96:
+        if pred[0] > 0.94:
             isJumping = True
         else:
             isJumping = False                   

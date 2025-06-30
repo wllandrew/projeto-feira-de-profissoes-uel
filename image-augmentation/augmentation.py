@@ -6,9 +6,9 @@ import albumentations as A
 
 os.system('')
 
-INPUT_DIR = "not_jumping"
-OUTPUT_DIR = "augmented-not-jumping"
-AUGMENT = 1
+INPUT_DIR = "no-jumping-redimensionado"
+OUTPUT_DIR = "augmented-no-jumping-noise"
+AUGMENT = 4
 RESOLUTION = (128, 128)  
 
 os.makedirs(OUTPUT_DIR, exist_ok=True) 

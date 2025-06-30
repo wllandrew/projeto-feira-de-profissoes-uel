@@ -2,7 +2,6 @@ import os
 import numpy as np
 import cv2
 import pandas as pd
-from skimage.feature import hog
 
 """
 Pipeline para converter imagens com HOG e salvar como CSV rotulado.

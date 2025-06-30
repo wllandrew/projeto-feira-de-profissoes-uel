@@ -2,13 +2,18 @@ import cv2
 import threading
 import keyboard
 import time
+import os
+import joblib
+
+
 
 # Configurações do programa
 CAMERA = 1
 RESOLUTION = (128, 128)
 NORMALIZATION = 255.0
-MODEL = 'NN' # SVM or NN
-MODEL_PATH = 'nn_model_super.keras'
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL = 'SVM' # SVM or NN
+MODEL_PATH = 'svm-super-model.pkl'
 NN_MIN = 0.96 # S Apenas se for NN model
 PREDICTS_PER_SECOND = 10 # Previsões que o modelo faz por segundo
 CAM_FPS = 60 # Frames por segundo da camera
@@ -45,8 +50,8 @@ def classifier_thread():
     global isJumping, predictFrame, running, pause, modelLoading
 
     if MODEL == 'SVM':
-        import joblib
         load_model = lambda path: joblib.load(path)
+        print("Modelo carregado com sucesso!")
 
     elif MODEL == 'NN':
         from tensorflow import keras
@@ -54,7 +59,8 @@ def classifier_thread():
     else:
         raise ValueError("Modelo não suportado")
     
-    model = load_model(MODEL_PATH)
+    caminho = os.path.join(CURRENT_DIR, MODEL_PATH)
+    model = load_model(caminho)
     predictJump = predict_model(MODEL, model)
     
     while predictFrame is None:

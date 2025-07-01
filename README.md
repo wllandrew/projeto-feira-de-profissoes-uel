@@ -7,6 +7,15 @@ Este projeto foi desenvolvido para a Feira de Profissões da UEL em 2025, como u
 - Kauã Felipe Martins
 - Leonardo Madeira Alves Pereira
 
+## Relatório Acadêmico do Projeto
+- Matheus Felipe Aguiar Barbosa
+
+## Coordenação
+- Isabela Ribeiro de Oliveira
+
+## Testes e implementação 
+- Alef Vinícius Caires Carvalho
+- Emilly Vitória Zamperlini
 ---
 
 ## Como rodar o projeto

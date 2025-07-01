@@ -74,6 +74,9 @@ O programa irá:
 - Certifique-se de que a iluminação e o enquadramento estejam adequados para melhor detecção.
 - Para treinar ou ajustar modelos, utilize os scripts e notebooks dos módulos `frames-capture`, `image-processing`, `image-augmentation`, `data` e `model`.
 
+## Relatório Final do Projeto:
+- Acesse o Relatório Acadêmico do projeto no link a seguir: https://drive.google.com/file/d/1tphXsZfHcArDGCdaW9cmsmywrHnn7GKH/view?usp=sharing
+
 ---
 
 ## Estrutura dos módulos principais
